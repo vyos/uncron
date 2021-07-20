@@ -76,20 +76,46 @@ let create_socket sockfile =
     Lwt.return sock
 
 (* Job handling functions *)
-let log_result res =
+let log_result (res, out, err) =
     let msg =
         (match res with
-        | Lwt_unix.WEXITED n -> Printf.sprintf "Job exited with code %d" n
-        | Lwt_unix.WSIGNALED n -> Printf.sprintf "Job was killed by signal %d" n
-        | Lwt_unix.WSTOPPED _ -> "Job stopped")
-    in Logs_lwt.info (fun m -> m "%s" msg)
+        | Ok (Unix.WEXITED n) -> Printf.sprintf "Job exited with code %d" n
+        | Ok (Unix.WSIGNALED n) -> Printf.sprintf "Job was killed by signal %d" n
+        | Ok (Unix.WSTOPPED _) -> "Job stopped"
+        | Error msg -> Printf.sprintf "Job execution caused an exception: %s" msg)
+    in Logs_lwt.info (fun m -> m "%s\nStdout: %s\nStderr: %s\n" msg out err)
+
+let get_program_output ?(input=None) command env_array =
+    (* open_process_full does not automatically pass the existing environment
+       to the child process, so we need to add it to our custom environment. *)
+    let env_array = Array.append (Unix.environment ()) env_array in
+    try
+        let std_out, std_in, std_err = Unix.open_process_full command env_array in
+        let () =
+            begin match input with
+            | None -> ()
+            | Some i ->
+              let () = Printf.fprintf std_in i; flush std_in in
+              (* close stdin to signal the end of input *)
+              close_out std_in
+            end
+        in
+        let output = CCIO.read_all std_out in
+        let err = CCIO.read_all std_err in
+        let res = Unix.close_process_full (std_out, std_in, std_err) in
+        (Ok res, output, err)
+    with
+    | Sys_error msg -> (Error (Printf.sprintf "System error: %s" msg), "", "")
+    | _ ->
+      let msg = Printexc.get_backtrace () in
+      (Error msg, "", "")
 
 let run_job job =
     match job with
     | Some j ->
         let%lwt _ = Logs_lwt.info (fun m -> m "Running job \"%s\"" j) in
-        let%lwt res = Lwt_unix.system j in
-        let%lwt () = log_result res in
+        let%lwt (res, out, err) = get_program_output j [||] |> Lwt.return in
+        let%lwt () = log_result (res, out, err) in
         return ()
     | None -> return_unit
 

@@ -3,6 +3,8 @@
     Build with: ocamlfind ocamlopt -package lwt,lwt.unix,lwt_ppx,logs,logs.lwt -linkpkg -o uncron ./uncron.ml
  *)
 
+let () = Printexc.record_backtrace true
+
 open Lwt
 
 (* Queue *)

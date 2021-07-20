@@ -43,14 +43,16 @@ let rec handle_connection ic oc () =
         match msg with
         | Some msg -> 
             let reply = handle_message msg in
-            Lwt_io.write_line oc reply >>= handle_connection ic oc
+            let%lwt () = Lwt_io.write_line oc reply in
+            let%lwt () = Lwt_io.flush oc in
+            Lwt_io.close oc
         | None -> Logs_lwt.info (fun m -> m "Connection closed") >>= return)
 
 let accept_connection conn =
     let fd, _ = conn in
     let ic = Lwt_io.of_fd Lwt_io.Input fd in
     let oc = Lwt_io.of_fd Lwt_io.Output fd in
-    Lwt.on_failure (handle_connection ic oc ()) (fun e -> Logs.err (fun m -> m "%s" (Printexc.to_string e) ));
+    Lwt.on_failure (handle_connection ic oc ()) (fun e -> Logs.err (fun m -> m "%s" (Printexc.to_string e)));
     Logs_lwt.info (fun m -> m "New connection") >>= return
  
 let delete_socket_if_exists sockfile =

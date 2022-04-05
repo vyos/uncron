@@ -1,0 +1,10 @@
+(executable
+ (name uncron)
+ (public_name uncron)
+ (libraries
+   containers
+   lwt
+   lwt.unix
+   lwt_ppx
+   logs
+   logs.lwt))

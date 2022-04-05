@@ -1,0 +1,38 @@
+opam-version: "2.0"
+name: "uncron"
+version: "0.9.0"
+synopsis: "Simple command queue manager"
+description: """
+Uncron is a simple command queue manager.
+It accepts commands through a UNIX domain socket connection
+and executes them sequentially: next one is executed only when the previous one
+completes. 
+
+Its main goal is to provide a workaround for tools that work with shared data
+but don't have a built-in arbitration mechanism to allow two copies of the tool
+to work safely.
+"""
+maintainer: "Daniil Baturin <daniil+opam@baturin.org>"
+authors: "Daniil Baturin <daniil+uncron@baturin.org>"
+license: "MIT"
+homepage: "https://github.com/vyos/uncron"
+bug-reports: "https://github.com/vyos/uncron/issues"
+dev-repo: "git+https://github.com/vyos/uncron"
+build: [
+  ["dune" "subst"] {dev}
+  ["dune" "build" "-p" name "-j" jobs]
+]
+depends: [
+  "ocaml" {>= "4.08"}
+  "dune" {>= "2.0.0"}
+  "lwt"
+  "lwt.unix"
+  "logs"
+  "logs.lwt"
+  "containers"
+]
+
+conflicts: [
+  "result" {< "1.5"}
+]
+

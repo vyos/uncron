@@ -7,6 +7,8 @@ let () = Printexc.record_backtrace true
 
 open Lwt
 
+let (let*) = Lwt.bind
+
 (* Queue *)
 module Queue = struct
     type 'a queue = Queue of 'a list * 'a list
@@ -36,24 +38,24 @@ let backlog = 100
 let handle_message msg =
     let jobs = !queue in
     let jobs = Queue.add jobs msg in
-    Logs_lwt.info (fun m -> m "Job \"%s\" was added to the queue" msg);
+    let () = ignore @@ Logs_lwt.info (fun m -> m "Job \"%s\" was added to the queue" msg) in
     queue := jobs; Printf.sprintf "Job \"%s\" accepted" msg
 
-let rec handle_connection ic oc () =
+let handle_connection ic oc () =
     Lwt_io.read_line_opt ic >>=
     (fun msg ->
         match msg with
         | Some msg -> 
             let reply = handle_message msg in
-            let%lwt () = Lwt_io.write_line oc reply in
-            let%lwt () = Lwt_io.flush oc in
+            let* () = Lwt_io.write_line oc reply in
+            let* () = Lwt_io.flush oc in
             Lwt_io.close oc
         | None -> Logs_lwt.info (fun m -> m "Connection closed") >>= return)
 
 let accept_connection conn =
     let fd, _ = conn in
-    let ic = Lwt_io.of_fd Lwt_io.Input fd in
-    let oc = Lwt_io.of_fd Lwt_io.Output fd in
+    let ic = Lwt_io.of_fd ~mode:Lwt_io.Input fd in
+    let oc = Lwt_io.of_fd ~mode:Lwt_io.Output fd in
     Lwt.on_failure (handle_connection ic oc ()) (fun e -> Logs.err (fun m -> m "%s" (Printexc.to_string e)));
     Logs_lwt.info (fun m -> m "New connection") >>= return
  
@@ -70,8 +72,8 @@ let create_socket sockfile =
     let open Lwt_unix in
     let () = delete_socket_if_exists sockfile in
     let backlog = 100 in
-    let%lwt sock = socket PF_UNIX SOCK_STREAM 0 |> Lwt.return in
-    let%lwt () = Lwt_unix.bind sock @@ ADDR_UNIX(sockfile) in
+    let* sock = socket PF_UNIX SOCK_STREAM 0 |> Lwt.return in
+    let* () = Lwt_unix.bind sock @@ ADDR_UNIX(sockfile) in
     listen sock backlog;
     Lwt.return sock
 
@@ -113,9 +115,9 @@ let get_program_output ?(input=None) command env_array =
 let run_job job =
     match job with
     | Some j ->
-        let%lwt _ = Logs_lwt.info (fun m -> m "Running job \"%s\"" j) in
-        let%lwt (res, out, err) = get_program_output j [||] |> Lwt.return in
-        let%lwt () = log_result (res, out, err) in
+        let* _ = Logs_lwt.info (fun m -> m "Running job \"%s\"" j) in
+        let* (res, out, err) = get_program_output j [||] |> Lwt.return in
+        let* () = log_result (res, out, err) in
         return ()
     | None -> return_unit
 
@@ -139,8 +141,8 @@ let create_server sock =
     in serve
 
 let main_loop () =
-    let%lwt sock = create_socket sock_path in
-    let%lwt () = start_runner () in
+    let* sock = create_socket sock_path in
+    let* () = start_runner () in
     let serve = create_server sock in
     serve ()
 

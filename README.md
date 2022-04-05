@@ -1,6 +1,6 @@
 # uncron
 
-Uncron is a simple job queue service that reds command from a UNIX domain socket
+Uncron is a simple job queue service that reads command from a UNIX domain socket
 and executes them sequentially.
 
 Its goal is to serve as an intermediate layer for tools that don't implement locking
@@ -18,11 +18,11 @@ OPAM is capable of installing the OCaml compiler itself and it will be
 opam init
 
 # Install dependencies
-opam install ocamlfind lwt lwt_ppx logs containers
+opam install lwt logs containers
 
 # Build uncron
-cd src/
-make
+dune build
+
 ```
 
 Then you can copy the `uncron` executable to somewehre in the `$PATH`.

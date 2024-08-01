@@ -31,7 +31,7 @@ end
 (* Shared job queue *)
 let queue = ref Queue.empty
 
-let sock_path = "/tmp/uncron.sock"
+let sock_path = "/run/uncron.sock"
 let backlog = 100
 
 (* Communication functions *)

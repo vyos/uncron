@@ -1,4 +1,4 @@
 #!/bin/sh
 
-echo $1 | socat - UNIX-CONNECT:/tmp/uncron.sock
+echo $1 | socat - UNIX-CONNECT:/run/uncron.sock
 

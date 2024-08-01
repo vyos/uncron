@@ -1,0 +1,17 @@
+Source: uncron
+Section: contrib/net
+Priority: extra
+Maintainer: VyOS Package Maintainers <maintainers@vyos.net>
+Build-Depends: debhelper (>= 9),
+  quilt
+Standards-Version: 3.9.6
+
+Package: uncron
+Architecture: any
+Depends: socat
+  ${misc:Depends}
+Description: Simple job queue daemon
+  Simple job queue daemon that allows scheduling commands
+  with a guarantee that next command will not run
+  until previous commands completes,
+  so that it's safe to use with utilities that can't run in parallel

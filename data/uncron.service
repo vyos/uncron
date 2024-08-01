@@ -3,12 +3,11 @@ Description=Command Queue Service
 After=auditd.service systemd-user-sessions.service time-sync.target
 
 [Service]
-EnvironmentFile=/etc/sysconfig/uncron
-ExecStart=/usr/sbin/uncron
+ExecStart=/usr/bin/uncron
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
-User=khagen
-Group=maintainers
+User=root
+Group=
 Restart=on-failure
 RestartSec=5s
 

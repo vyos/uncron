@@ -1,0 +1,19 @@
+#!/usr/bin/make -f
+
+DIR := debian/uncron
+
+%:
+	dh $@ --with quilt
+
+override_dh_auto_build:
+	dune build --profile static
+
+override_dh_auto_install:
+	mkdir -p $(DIR)/usr/bin
+	cp _build/default/src/uncron.exe $(DIR)/usr/bin/uncron
+	cp src/uncron-add $(DIR)/usr/bin/uncron-add
+	mkdir -p $(DIR)/usr/lib/systemd/system
+	cp data/uncron.service $(DIR)/usr/lib/systemd/system/uncron.service
+
+override_dh_auto_test:
+	echo "No tests yet"

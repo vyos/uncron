@@ -1,0 +1,5 @@
+uncron (1.0.0) unstable; urgency=medium
+
+  * Initial Debian package release.
+
+ -- Daniil Baturin <daniil@vyos.io>  Tue, 30 Jul 2024 12:14:31 -0400

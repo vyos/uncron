@@ -5,6 +5,5 @@
    containers
    lwt
    lwt.unix
-   lwt_ppx
    logs
    logs.lwt))
